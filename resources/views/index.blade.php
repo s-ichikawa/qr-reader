@@ -1,0 +1,1 @@
+<img src="{!! route('qrcode', ['text'=>urlencode('shingo')]) !!}">

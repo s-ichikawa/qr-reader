@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TestApp</title>
+    <style>
+        body {
+            width: 100%;
+            margin: auto;
+        }
+
+        header {
+            padding: 5px;
+            background-color: #696f71;
+
+        }
+
+        article {
+            margin: 5px;
+
+        }
+        video {
+            background-color: #0f0f0f;
+        }
+        p {
+            margin: auto;
+        }
+        #camera {
+            text-align: center;
+        }
+        #profile div {
+            border-bottom: solid 3px #dbdbdb;
+            vertical-align: middle;
+            margin-bottom: 5px;
+            min-height: 25px;
+        }
+        #profile div label {
+            float: left;
+            margin-right: 10px;
+            min-width: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<article>
+    <section id="camera">
+        <video id="myVideo" width="300" height="300" autoplay="1"></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <img id="capture" src="" style="display: none;">
+    </section>
+    <section id="event">
+        <h1 id="title">読込中...</h1>
+    </section>
+    <section id="profile">
+        <div>
+            <label>URL</label>
+            <p id="url" title="url">now scanning...</p>
+        </div>
+        <div>
+            <label>Name</label>
+            <p id="name" title="url">now scanning...</p>
+        </div>
+    </section>
+</article>
+
+<script type="text/javascript">
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia;
+    window.URL = window.URL || window.webkitURL;
+
+    var ipc = require('ipc');
+    var video = document.getElementById('myVideo');
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var localStream = null;
+
+    navigator.getUserMedia({video: true, audio: false},
+            function (stream) { // for success case
+                video.src = window.URL.createObjectURL(stream);
+                localStream = stream;
+            },
+            function (err) { // for error case
+                console.log(err);
+            }
+    );
+
+    function capture() {
+        if (!localStream) {
+            return;
+        }
+        ctx.drawImage(video, 0, 0);
+        document.getElementById('capture').src = canvas.toDataURL('image/webp');
+        ipc.send('capture', canvas.toDataURL().replace(/^data:image\/png;base64,/, ""));
+    }
+
+    ipc.on('url', function (arg) {
+        document.getElementById('url').value = arg;
+    });
+
+    setInterval(capture, 5000);
+</script>
+</body>
+</html>
